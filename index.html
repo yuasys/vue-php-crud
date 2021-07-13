@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"  integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="./style.css">
+  <title>Vue.js-PHP-MySQLi-CRUD</title>
+</head>
+<body>
+  <div id="app">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-12 bg-dark">
+          <p class="text-center text-light pt-2">CRUD app using Vue.js, PHP, and MySQLi </p>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row mt-3">
+        <div class="col-lg-6">
+          <h3 class="text-primary">Registered Users</h3>
+        </div>
+        <div class="col-lg-6">
+          <button type="button" class="btn btn-primary float-right" v-on:click="showAddUserModal=true">Add New User</button>
+        </div>
+      </div>
+      <hr class="bg-secondary">
+      <div class="alert alert-success" v-if="successMessage">{{ successMessage }}</div>
+      <div class="alert alert-danger" v-if="errorMessage">{{ errorMessage }}</div>
+      <div class="row">
+        <div class="col-lg-12">
+          <table class="table table-bordered table-stripped">
+            <thead>
+              <tr class="bg-primary text-center text-light">
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Edit</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="text-center" v-for="user in userList" :key="user.id">
+                <td>{{ user.id }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email}}</td>
+                <td>{{ user.phone }}</td>
+                <td>
+                  <a href="#" class="text-success" v-on:click="showEditModal=true;chooseUser(user)">
+                    <i class="fa fa-edit"></i>
+                  </a>
+                </td>
+                <td>
+                  <a href="#" class="text-danger" v-on:click="showDeleteModal=true;chooseUser(user)">
+                    <i class="fa fa-trash"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Add User Dialog -->
+      <div class="overlay" v-if="showAddUserModal==true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5>Add New User</h5>
+              <button type="button" class="close" v-on:click="showAddUserModal=false">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form action="#" method="post">
+                <div class="form-group mb-2">
+                  <input type="text" class="form-control form-control-lg" name="name" placeholder="Name" v-model="addNewUserData.name">
+                </div>
+                <div class="form-group mb-2">
+                  <input type="text" class="form-control form-control-lg" name="email" placeholder="Email" v-model="addNewUserData.email">
+                </div>
+                <div class="form-group mb-2">
+                  <input type="text" class="form-control form-control-lg" name="phone" placeholder="Phome" v-model="addNewUserData.phone">
+                </div>
+                <div class="form-group">
+                  <button type="button" class="btn btn-primary w-100" v-on:click="showAddUserModal=false;createNewUser()">Add User</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Edit User Dialog -->
+      <div class="overlay" v-if="showEditModal==true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5>Edit User</h5>
+              <button type="button" class="close" v-on:click="showEditModal=false">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form action="#" method="post">
+                <div class="form-group mb-2">
+                  <input type="text" class="form-control form-control-lg" name="name" placeholder="Name" v-model="selectedUser.name">
+                </div>
+                <div class="form-group mb-2">
+                  <input type="text" class="form-control form-control-lg" name="email" placeholder="Email" v-model="selectedUser.email">
+                </div>
+                <div class="form-group mb-2">
+                  <input type="text" class="form-control form-control-lg" name="phone" placeholder="Phome" v-model="selectedUser.phone">
+                </div>
+                <div class="form-group">
+                  <button type="button" class="btn btn-primary w-100" v-on:click="showEditModal=false;updateUser()">Edit
+                    User</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Delete User Dialog -->
+      <div class="overlay" v-if="showDeleteModal==true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5>Edit User</h5>
+              <button type="button" class="close" v-on:click="showDeleteModal=false">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <h4>Do you want to delete this user?</h4>
+              <h4>You are deleting userName</h4>
+              <hr>
+              <button type="button" class="btn btn-danger btn-lg" v-on:click="showDeleteModal=false;deleteUser()">Yes</button>
+              <button type="button" class="btn btn-success btn-lg" v-on:click="showDeleteModal=false">No</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./users.js"></script>
+</body>
+</html>
